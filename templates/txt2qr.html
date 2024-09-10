@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Text to QR Code Converter</title>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='white' width='100' height='100'/><rect fill='black' x='10' y='10' width='80' height='80'/><rect fill='white' x='30' y='30' width='40' height='40'/><rect fill='black' x='40' y='40' width='20' height='20'/></svg>">
+
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .container {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .logo {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #1a73e8;
+            margin-bottom: 1rem;
+        }
+
+        .logo span {
+            color: #34a853;
+        }
+
+        h1 {
+            color: #1a73e8;
+            margin-top: 0;
+            font-size: 1.5rem;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 0.5rem;
+            margin-bottom: 1rem;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            resize: vertical;
+            box-sizing: border-box;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .button-group {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+
+        button {
+            background-color: #1a73e8;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            flex: 1;
+            min-width: 120px;
+            max-width: 200px;
+        }
+
+        button:hover {
+            background-color: #1557b0;
+        }
+
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+
+        #qrcode {
+            margin-top: 1rem;
+            display: flex;
+            justify-content: center;
+        }
+
+        #qrcode img {
+            max-width: 100%;
+            height: auto;
+        }
+
+        .error-message {
+            color: #d32f2f;
+            margin-top: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        #downloadButton {
+            background-color: #34a853;
+        }
+
+        #downloadButton:hover {
+            background-color: #2e8b57;
+        }
+
+        .mode-toggle {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        .mode-toggle input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked+.slider {
+            background-color: #1a73e8;
+        }
+
+        input:checked+.slider:before {
+            transform: translateX(26px);
+        }
+
+        .mode-toggle .icon {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 1;
+            color: #333;
+            transition: .4s;
+        }
+
+        .mode-toggle .icon-light {
+            left: 10px;
+        }
+
+        .mode-toggle .icon-dark {
+            right: 10px;
+        }
+
+        input:checked+.slider .icon-light {
+            color: #fff;
+        }
+
+        input:not(:checked)+.slider .icon-dark {
+            color: #fff;
+        }
+
+        body.dark-mode {
+            background-color: #1f1f1f;
+            color: #ffffff;
+        }
+
+        .dark-mode .container {
+            background-color: #2d2d2d;
+            color: #ffffff;
+        }
+
+        .dark-mode textarea {
+            background-color: #3d3d3d;
+            color: #ffffff;
+            border-color: #555;
+        }
+
+        .dark-mode h1 {
+            color: #4285f4;
+        }
+
+        .dark-mode .logo {
+            color: #4285f4;
+        }
+
+        .dark-mode .logo span {
+            color: #34a853;
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+
+            .container {
+                padding: 1rem;
+            }
+
+            .logo {
+                font-size: 2rem;
+            }
+
+            h1 {
+                font-size: 1.2rem;
+            }
+
+            button {
+                padding: 0.4rem 0.8rem;
+                font-size: 0.9rem;
+            }
+
+            .mode-toggle {
+                top: 0.5rem;
+                right: 0.5rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <label class="mode-toggle">
+        <input type="checkbox" id="darkModeToggle" onchange="toggleDarkMode()">
+        <span class="slider">
+            <span class="icon icon-light">☀️</span>
+            <span class="icon icon-dark">🌙</span>
+        </span>
+    </label>
+    <div class="container">
+        <div class="logo">QR<span>ify</span></div>
+        <h1>Text to QR Code Converter</h1>
+        <textarea id="textInput" rows="4" placeholder="Enter your text here" oninput="checkInput()"></textarea>
+        <div class="button-group">
+            <button id="generateButton" onclick="generateQR()" disabled>Generate QR Code</button>
+            <button id="downloadButton" onclick="downloadQR()" disabled>Download QR</button>
+        </div>
+        <div id="error-message" class="error-message"></div>
+        <div id="qrcode"></div>
+    </div>
+
+    <script>
+        function checkInput() {
+            var text = document.getElementById("textInput").value.trim();
+            var generateButton = document.getElementById("generateButton");
+            var downloadButton = document.getElementById("downloadButton");
+            generateButton.disabled = text === "";
+            downloadButton.disabled = true; // Always disable download button when input changes
+        }
+
+        function generateQR() {
+            var text = document.getElementById("textInput").value.trim();
+            var errorMessage = document.getElementById("error-message");
+            var qrcodeDiv = document.getElementById('qrcode');
+            var downloadButton = document.getElementById('downloadButton');
+
+            if (text === "") {
+                errorMessage.textContent = "Please enter some text before generating a QR code.";
+                qrcodeDiv.innerHTML = "";
+                downloadButton.disabled = true;
+                return;
+            }
+
+            errorMessage.textContent = "";
+            var qr = qrcode(0, 'M');
+            qr.addData(text);
+            qr.make();
+            qrcodeDiv.innerHTML = qr.createImgTag(5);
+            downloadButton.disabled = false;
+        }
+
+        function downloadQR() {
+            var qrImage = document.querySelector("#qrcode img");
+            if (qrImage) {
+                var canvas = document.createElement("canvas");
+                canvas.width = qrImage.width;
+                canvas.height = qrImage.height;
+                var ctx = canvas.getContext("2d");
+                ctx.drawImage(qrImage, 0, 0);
+
+                var dataURL = canvas.toDataURL("image/png");
+                var downloadLink = document.createElement("a");
+                downloadLink.href = dataURL;
+                downloadLink.download = "qrcode.png";
+                document.body.appendChild(downloadLink);
+                downloadLink.click();
+                document.body.removeChild(downloadLink);
+            }
+        }
+
+        function generateRandomText() {
+            var lorem = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.";
+            var words = lorem.split(' ');
+            var randomWords = [];
+            for (var i = 0; i < 20; i++) {
+                var randomIndex = Math.floor(Math.random() * words.length);
+                randomWords.push(words[randomIndex]);
+            }
+            return randomWords.join(' ');
+        }
+
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark-mode');
+            saveDarkModePreference();
+        }
+
+        function saveDarkModePreference() {
+            const isDarkMode = document.body.classList.contains('dark-mode');
+            localStorage.setItem('darkMode', isDarkMode);
+            console.log('Saved dark mode preference:', isDarkMode);
+        }
+
+        function loadDarkModePreference() {
+            const darkModeToggle = document.getElementById('darkModeToggle');
+            const savedDarkMode = localStorage.getItem('darkMode');
+            console.log('Saved dark mode preference:', savedDarkMode);
+
+            if (savedDarkMode === 'true') {
+                document.body.classList.add('dark-mode');
+                darkModeToggle.checked = true;
+                console.log('Dark mode activated');
+            } else {
+                document.body.classList.remove('dark-mode');
+                darkModeToggle.checked = false;
+                console.log('Light mode activated');
+            }
+        }
+
+        window.onload = function () {
+            var textInput = document.getElementById("textInput");
+            textInput.value = generateRandomText();
+            checkInput();
+            loadDarkModePreference();
+        }
+    </script>
+</body>
+
+</html>

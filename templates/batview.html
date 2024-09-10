@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Battery Status</title>
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='battery_favicon.svg') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+            background-image: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        }
+        #battery-info {
+            text-align: center;
+            padding: 30px;
+            background-color: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+        #battery-info:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+        }
+        .battery-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+            position: relative;
+            display: inline-block;
+        }
+        .battery-icon .fa-bolt {
+            position: absolute;
+            font-size: 24px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #FFD700;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        p {
+            font-size: 18px;
+            color: #666;
+            margin: 10px 0;
+        }
+        #battery-percent {
+            font-weight: bold;
+            font-size: 24px;
+            transition: all 0.3s ease;
+        }
+        #power-status {
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div id="battery-info">
+        <div class="battery-icon">
+            <i class="fas fa-battery-full" id="battery-level-icon"></i>
+            <i class="fas fa-bolt" id="charging-icon"></i>
+        </div>
+        <h1>Battery Status</h1>
+        <p>Battery Percentage: <span id="battery-percent"></span>%</p>
+        <p>Power Status: <span id="power-status"></span></p>
+    </div>
+
+    <script>
+        function updateBatteryInfo() {
+            // console.log("Updating battery info...");
+            fetch('/battery')
+                .then(response => response.json())
+                .then(data => {
+                    // console.log("Received data:", data);
+                    const batteryPercent = document.getElementById('battery-percent');
+                    const powerStatus = document.getElementById('power-status');
+                    const batteryIcon = document.getElementById('battery-level-icon');
+                    const chargingIcon = document.getElementById('charging-icon');
+
+                    // console.log("Elements:", {
+                    //     batteryPercent: batteryPercent,
+                    //     powerStatus: powerStatus,
+                    //     batteryIcon: batteryIcon,
+                    //     chargingIcon: chargingIcon
+                    // });
+
+                    if (data.error) {
+                        // console.log("Error in data:", data.error);
+                        if (batteryPercent) batteryPercent.textContent = 'N/A';
+                        if (powerStatus) powerStatus.textContent = 'Information not available';
+                    } else {
+                        // Color coding
+                        let color;
+                        if (data.percent > 60) {
+                            color = '#4CAF50';  // Green
+                        } else if (data.percent > 20) {
+                            color = '#FFA500';  // Orange
+                        } else {
+                            color = '#F44336';  // Red
+                        }
+
+                        if (batteryPercent) {
+                            batteryPercent.textContent = data.percent;
+                            batteryPercent.style.color = color;
+                        }
+
+                        // Update battery icon
+                        if (batteryIcon) {
+                            // console.log("Updating battery icon...");
+                            try {
+                                batteryIcon.className = 'fas';
+                                if (data.percent > 87) {
+                                    batteryIcon.classList.add('fa-battery-full');
+                                } else if (data.percent > 62) {
+                                    batteryIcon.classList.add('fa-battery-three-quarters');
+                                } else if (data.percent > 37) {
+                                    batteryIcon.classList.add('fa-battery-half');
+                                } else if (data.percent > 12) {
+                                    batteryIcon.classList.add('fa-battery-quarter');
+                                } else {
+                                    batteryIcon.classList.add('fa-battery-empty');
+                                }
+
+                                // Set icon color
+                                batteryIcon.style.color = color;
+                                // console.log("Battery icon updated successfully");
+                            } catch (error) {
+                                console.error("Error updating battery icon:", error);
+                            }
+                        } else {
+                            console.warn("Battery icon element not found");
+                        }
+
+                        // Show/hide charging icon
+                        if (chargingIcon) {
+                            chargingIcon.style.opacity = data.plugged ? '1' : '0';
+                        } else {
+                            console.warn("Charging icon element not found");
+                        }
+
+                        if (powerStatus) {
+                            powerStatus.textContent = data.plugged ? 'Plugged In' : 'On Battery';
+                            powerStatus.style.color = data.plugged ? '#4CAF50' : '#FFA500';
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching battery data:', error);
+                    const batteryPercent = document.getElementById('battery-percent');
+                    const powerStatus = document.getElementById('power-status');
+                    if (batteryPercent) batteryPercent.textContent = 'Error';
+                    if (powerStatus) powerStatus.textContent = 'Error fetching data';
+                });
+        }
+
+        // Update battery info every 5 seconds
+        setInterval(updateBatteryInfo, 5000);
+
+        // Initial update
+        document.addEventListener('DOMContentLoaded', (event) => {
+            // console.log("DOM fully loaded and parsed");
+            updateBatteryInfo();
+        });
+    </script>
+</body>
+</html>

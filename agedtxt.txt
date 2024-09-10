@@ -1,0 +1,16 @@
+pip install opencv-python
+pip install opencv-python numpy
+pip install deepface
+
+```
+2. Install the required insightface dependencies: (not working)
+
+pip install --upgrade pip setuptools wheel
+pip install numpy opencv-python onnxruntime
+pip install insightface opencv-python numpy onnxruntime
+pip install git+https://github.com/deepinsight/insightface.git@master (optional)
+
+
+````
+pip install arcface opencv-python numpy (not working)
+pip install astropy

@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fingerprint Authentication</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+        .container {
+            text-align: center;
+            padding: 20px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        #message {
+            margin-top: 20px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <!-- run this: python -m http.server 8000 -->
+    <div class="container">
+        <h1>Fingerprint Authentication</h1>
+        <button id="authButton">Authenticate with Fingerprint</button>
+        <div id="message"></div>
+    </div>
+
+    <script>
+        const authButton = document.getElementById('authButton');
+        const messageDiv = document.getElementById('message');
+
+        authButton.addEventListener('click', async () => {
+            try {
+                // Check if the browser supports WebAuthn
+                if (!window.PublicKeyCredential) {
+                    throw new Error('WebAuthn is not supported in this browser.');
+                }
+
+                // Check if the device has a fingerprint sensor
+                const available = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+                if (!available) {
+                    throw new Error('No fingerprint sensor is available on this device.');
+                }
+
+                // Create a challenge (in a real-world scenario, this should come from your server)
+                const challenge = new Uint8Array(32);
+                window.crypto.getRandomValues(challenge);
+
+                // Create authentication options
+                const options = {
+                    challenge: challenge,
+                    rp: {
+                        name: 'Fingerprint Auth Demo'
+                    },
+                    user: {
+                        id: new Uint8Array([1, 2, 3, 4]),
+                        name: 'demo@example.com',
+                        displayName: 'Demo User'
+                    },
+                    pubKeyCredParams: [{alg: -7, type: 'public-key'}],
+                    authenticatorSelection: {
+                        authenticatorAttachment: 'platform',
+                        userVerification: 'required'
+                    },
+                    timeout: 60000
+                };
+
+                // Start the authentication process
+                const credential = await navigator.credentials.create({ publicKey: options });
+
+                // If we reach here, authentication was successful
+                messageDiv.textContent = 'Authentication successful!';
+                messageDiv.style.color = 'green';
+            } catch (error) {
+                messageDiv.textContent = `Error: ${error.message}`;
+                messageDiv.style.color = 'red';
+            }
+        });
+    </script>
+</body>
+</html>
